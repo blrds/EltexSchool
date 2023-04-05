@@ -2,28 +2,24 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<time.h>
+#include<string.h>
 
 void parent(int pipe){
-    printf("parent start\n");
     FILE *fd=fdopen(pipe, "r");
     int c;
     char str[256]={0};
-    printf("parent read\n");
     int i=0;//int из-за fgetc(EOF=-1)
-    while((c=fgetc(fd))!=EOF){
-        if(c==EOF)break;
-        printf("parent read\n");
-        str[i]=c;
+    while(1){
+        c=fgetc(fd);//будет ждать нового символа
+        str[i]=(char)c;
         i++;
+        if(c=='\0')break;//спец символ, чтобы понять что пайп все
     }
-    str[i]='\0';
-    printf("parent read end\n");
     fclose(fd);
     printf("%s\n", str);
     FILE *f=fopen("a.txt", "w");
-    fwrite(&str,sizeof(str),1,f);
+    fwrite(&str,sizeof(char),strlen(str),f);
     fclose(f);
-    printf("parent end\n");
 }
 
 void child(int count, int pipe){
@@ -34,6 +30,7 @@ void child(int count, int pipe){
         j=rand()%20;
         fprintf(fd, "%d ", j);
     }
+    fprintf(fd,"%c", '\0');
     fclose(fd);
 }
 
