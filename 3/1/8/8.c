@@ -6,17 +6,23 @@
 void parent(int pipe){
     printf("parent start\n");
     FILE *fd=fdopen(pipe, "r");
-    FILE *f=fopen("a.txt", "w");
     int c;
+    char str[256]={0};
     printf("parent read\n");
+    int i=0;
     while((c=fgetc(fd))!=EOF){
+        if(c==EOF)break;
         printf("parent read\n");
-        fwrite(&c,sizeof(char),1,f);
-        printf("%c", (char)c);
+        str[i]=c;
+        i++;
     }
+    str[i]='\0';
     printf("parent read end\n");
-    fclose(f);
     fclose(fd);
+    printf("%s\n", str);
+    FILE *f=fopen("a.txt", "w");
+    fwrite(&str,sizeof(str),1,f);
+    fclose(f);
     printf("parent end\n");
 }
 
