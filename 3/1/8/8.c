@@ -9,7 +9,7 @@ void parent(int pipe){
     int c;
     char str[256]={0};
     printf("parent read\n");
-    int i=0;
+    int i=0;//int из-за fgetc(EOF=-1)
     while((c=fgetc(fd))!=EOF){
         if(c==EOF)break;
         printf("parent read\n");
