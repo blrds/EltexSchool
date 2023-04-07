@@ -9,18 +9,18 @@
 int main(){
     int fifo;
     char fifoFile[]="/tmp/fifo0001.1";
-    char str[80];
+    char str[80]={0};
     while(1){
-        fgets(str, 80, stdin);
-        if((fifo=open(fifoFile,O_RDONLY))==-1){
-            fprintf(stderr,"cant create fifo\n");
+        if((fifo=open(fifoFile,O_RDWR))==-1){
+            fprintf(stderr,"cant open fifo\n");
             exit(EXIT_FAILURE);
         }
-        if((read(fifo,&str, strlen(str)))==-1){
+        sprintf(str,"\0");
+        if((read(fifo,&str, sizeof(str)))==-1){
             fprintf(stderr,"cant read fifo\n");
             exit(EXIT_FAILURE);
         }else
-            printf("A%sA\n",str);
+            printf("%s\n",str);
         close(fifo);
     }
     exit(EXIT_SUCCESS);
