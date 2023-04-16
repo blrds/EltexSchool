@@ -4,6 +4,7 @@
         "time.h": "c",
         "unistd.h": "c",
         "string.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "fcntl.h": "c"
     }
 }
