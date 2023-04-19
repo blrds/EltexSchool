@@ -45,26 +45,23 @@ int main(int argc, char **argv) {
         exit(1);
     }
     /* Вводим строку, которую отошлем серверу */
-    printf("String => ");
-    fgets(sendline, 1000, stdin);
-    /* Отсылаем датаграмму */
-    if(sendline[strlen(sendline)-1]=='\n')sendline[strlen(sendline)-1]='\0';
-    if(sendto(sockfd,sendline,strlen(sendline)+1,0,(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0){
-        perror(NULL);
-        close(sockfd);
-        exit(1);
+    while(1){
+        printf("=> ");
+        fgets(sendline, 1000, stdin);
+        if(sendline[strlen(sendline)-1]=='\n')sendline[strlen(sendline)-1]='\0';
+        if(sendto(sockfd,sendline,strlen(sendline)+1,0,(struct sockaddr *) &servaddr,sizeof(servaddr)) < 0){
+            perror(NULL);
+            close(sockfd);
+            exit(1);
+        }
+        if((n = recvfrom(sockfd,recvline,1000,0,(struct sockaddr *) NULL,NULL)) < 0){
+            perror(NULL);
+            close(sockfd);
+            exit(1);
+        }
+        recvline[n]=0;
+        printf("()=>%s\n", recvline);
     }
-    /* Ожидаем ответа и читаем его. Максимальная
-    допустимая длина датаграммы – 1000 символов,
-    адрес отправителя нам не нужен */
-    if((n = recvfrom(sockfd,recvline,1000,0,(struct sockaddr *) NULL,NULL)) < 0){
-        perror(NULL);
-        close(sockfd);
-        exit(1);
-    }
-    /* Печатаем пришедший ответ и закрываем сокет */
-    recvline[n]=0;
-    printf("%s\n", recvline);
     close(sockfd);
     return 0;
 }

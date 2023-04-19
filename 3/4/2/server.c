@@ -11,7 +11,7 @@
 int main(int argc, char **argv){
     int sockfd; /* Дескриптор сокета */
     int clilen, n; /* Переменные для различных длин и количества символов */
-    char line[1000]; /* Массив для принятой и отсылаемой строки */
+    char sendline[1000], line[1000]; /* Массив для принятой и отсылаемой строки */
     struct sockaddr_in servaddr, cliaddr; /* Структуры для адресов сервера и клиента */
     /* Заполняем структуру для адреса сервера */
     bzero(&servaddr, sizeof(servaddr));
@@ -44,8 +44,9 @@ int main(int argc, char **argv){
         }
         /* Печатаем принятый текст на экране */
         line[n]=0;
-        printf("%s\n", line);
-        /* Принятый текст отправляем обратно по адресу отправителя */
+        printf("()=>%s\n", line);
+        printf("=> ");
+        fgets(sendline, 1000, stdin);
         if(sendto(sockfd, line, strlen(line), 0,(struct sockaddr *) &cliaddr, clilen) < 0){
             perror(NULL);
             close(sockfd);
