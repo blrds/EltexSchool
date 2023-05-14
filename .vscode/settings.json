@@ -6,6 +6,11 @@
         "string.h": "c",
         "types.h": "c",
         "fcntl.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "keyboard.h": "c",
+        "timer.h": "c",
+        "stringify.h": "c",
+        "vt.h": "c",
+        "kd.h": "c"
     }
 }
