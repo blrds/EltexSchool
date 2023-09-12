@@ -11,6 +11,7 @@
         "timer.h": "c",
         "stringify.h": "c",
         "vt.h": "c",
-        "kd.h": "c"
+        "kd.h": "c",
+        "init.h": "c"
     }
 }
