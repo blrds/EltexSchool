@@ -87,7 +87,7 @@ static ssize_t sysfs_store(struct kobject *kobj, struct kobj_attribute *attr,con
     return count;
 }
 
-struct kobj_attribute entry_attr = __ATTR(new_entry, 0660, sysfs_show, sysfs_store);
+struct kobj_attribute entry_attr = __ATTR(ipblocklist, 0660, sysfs_show, sysfs_store);
 
 
 static unsigned int hook_func_in (void *priv, struct sk_buff *skb, const struct nf_hook_state *state){
@@ -122,7 +122,7 @@ static unsigned int hook_func_in (void *priv, struct sk_buff *skb, const struct 
 
 
 static int __init init_main(void){
-    kobj_ref = kobject_create_and_add("entry_sysfs",kernel_kobj);
+    kobj_ref = kobject_create_and_add("ipblist",kernel_kobj);
     if(sysfs_create_file(kobj_ref,&entry_attr.attr)){
         printk(KERN_INFO"Cannot create sysfs file......\n");
         kobject_put(kobj_ref); 
