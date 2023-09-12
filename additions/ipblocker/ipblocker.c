@@ -112,7 +112,6 @@ static unsigned int hook_func_in (void *priv, struct sk_buff *skb, const struct 
         struct ipList *obj;
         list_for_each(ptr, &Head_Node){
             obj=list_entry(ptr,struct ipList,list);
-            printk (KERN_INFO "\"%s\"\n",obj->ip);
             if(!strcmp(obj->ip, source)){
                 return NF_DROP;
             }
