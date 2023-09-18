@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     /* Заполняем структуру для адреса клиента */
     bzero(&cliaddr, sizeof(cliaddr));
     cliaddr.sin_family = AF_INET;
-    cliaddr.sin_port = htons(0);
+    cliaddr.sin_port = htons(5556);
     cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     /* Настраиваем адрес сокета */
     if(bind(sockfd, (struct sockaddr *) &cliaddr, sizeof(cliaddr)) < 0){
