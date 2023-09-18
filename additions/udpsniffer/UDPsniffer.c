@@ -20,6 +20,7 @@ struct pseudo_header
 int s;
 char my_ip[32]="127.0.0.1";
 struct sockaddr_in dest;
+struct udphdr *clientudph;
 int dest_size;
 
 unsigned short csum(unsigned short *ptr,int nbytes) 
@@ -48,29 +49,37 @@ unsigned short csum(unsigned short *ptr,int nbytes)
 
 void PrintData (unsigned char* data , int Size)
 {
-	int i,j;
+	int i,j=0;
 	for(i=0 ; i < Size ; i++)
 	{
-		if( i!=0 && i%16==0)
+		if( i!=0 && i%16==0)   //if one line of hex printing is complete...
 		{
+			printf("         ");
 			for(j=i-16 ; j<i ; j++)
 			{
 				if(data[j]>=32 && data[j]<=128)
-					printf("%c",(unsigned char)data[j]);
+					printf("%c",(unsigned char)data[j]); //if its a number or alphabet
 				
-				else printf(".");
+				else printf("."); //otherwise print a dot
 			}
+			printf("\n");
 		} 
 		
-		
+		if(i%16==0) printf("   ");
+			printf(" %02X",(unsigned int)data[i]);
 				
-		if( i==Size-1)
-		{		
+		if( i==Size-1)  //print the last spaces
+		{
+			for(j=0;j<15-i%16;j++) printf("   "); //extra spaces
+			
+			printf("         ");
+			
 			for(j=i-i%16 ; j<=i ; j++)
 			{
 				if(data[j]>=32 && data[j]<=128) printf("%c",(unsigned char)data[j]);
 				else printf(".");
 			}
+			printf("\n");
 		}
 	}
 }
@@ -84,11 +93,11 @@ void recieve_udp(unsigned char *buffer , int Size)
 	
 	iphdrlen = iph->ihl*4;
 	
-	struct udphdr *udph = (struct udphdr*)(buffer + iphdrlen);
-	//dest.sin_addr.s_addr=iph->daddr;
-	printf("\n--client ip=%s--\n",inet_ntoa(dest.sin_addr));
-	PrintData(buffer + iphdrlen + sizeof udph ,( Size - sizeof udph - iph->ihl * 4 ));
-
+	clientudph = (struct udphdr*)(buffer + iphdrlen);
+	if(ntohs(clientudph->dest)!=5555)return;
+	printf("\n--client ip=%s port=%d--\n",inet_ntoa(dest.sin_addr), ntohs(clientudph->source));
+	PrintData(buffer + iphdrlen + sizeof clientudph ,( Size - sizeof clientudph - iphdrlen));
+	response_udp();
 }
 
 void response_udp()
@@ -101,26 +110,29 @@ void response_udp()
 	memset (datagram, 0, 4096);
 	
 	//IP header
-	struct iphdr *iph = (struct iphdr *) datagram;
+	/*struct iphdr *iph = (struct iphdr *) datagram;
 	
 	//UDP header
-	struct udphdr *udph = (struct udphdr *)(datagram + sizeof(struct ip));
+	struct udphdr *udph = (struct udphdr *)(datagram + sizeof(struct ip));*/
+	struct udphdr *udph=(struct udphdr*) datagram;
 	
 	struct sockaddr_in sin;
 	struct pseudo_header psh;
 	
 	//Data part
-	data = datagram + sizeof(struct iphdr) + sizeof(struct udphdr);
-	scanf("%s", data);
+	data = datagram /*+ sizeof(struct iphdr)*/ + sizeof(struct udphdr);
+	
+	strcpy(data, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n\0");
+	printf("data=%s\n",data);
 	
 	//some address resolution
 	
 	sin.sin_family = AF_INET;
-	sin.sin_port = dest.sin_port;
-	sin.sin_addr.s_addr = dest.sin_addr.s_addr;
-	
+	sin.sin_port = clientudph->source;
+	sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+	printf("Client addr=%s:%d\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 	//Fill in the IP Header
-	iph->ihl = 5;
+	/*iph->ihl = 5;
 	iph->version = 4;
 	iph->tos = 0;
 	iph->tot_len = sizeof(struct iphdr) + sizeof(struct udphdr) + strlen(data);
@@ -130,39 +142,40 @@ void response_udp()
 	iph->protocol = IPPROTO_UDP;
 	iph->check = 0;		//Set to 0 before calculating checksum
 	iph->saddr = inet_addr(my_ip);	//Spoof the source ip address
-	iph->daddr = dest.sin_addr.s_addr;	
+	iph->daddr = dest.sin_addr.s_addr;
 	//Ip checksum
-	iph->check = csum ((unsigned short *) datagram, iph->tot_len);
+	iph->check = csum ((unsigned short *) datagram, sizeof(struct iphdr));*/
 	
 	//UDP header
-	udph->source = htons (5555);
-	udph->dest = htons (dest.sin_port);
-	udph->len = htons(8 + strlen(data));
+	udph->source = htons(5555);
+	udph->dest = clientudph->source;
+	udph->len = htons(strlen(data)+sizeof(struct udphdr));
 	udph->check = 0;	//leave checksum 0 now, filled later by pseudo header
-	
-	//Now the UDP checksum using the pseudo header
+	printf("Source=%d, Dest=%d, Len=%d\n", ntohs(udph->source), ntohs(udph->dest),ntohs(udph->len));
+	PrintData(datagram, ntohs(udph->len));
+	/*//Now the UDP checksum using the pseudo header
 	psh.source_address = inet_addr( my_ip );
 	psh.dest_address = dest.sin_addr.s_addr;
 	psh.placeholder = 0;
 	psh.protocol = IPPROTO_UDP;
-	psh.udp_length = htons(sizeof(struct udphdr) + strlen(data) );
+	psh.udp_length = htons(sizeof(struct udphdr) + strlen(data));
 	
 	int psize = sizeof(struct pseudo_header) + sizeof(struct udphdr) + strlen(data);
 	pseudogram = malloc(psize);
 	
-	memcpy(pseudogram, (char*) &psh , sizeof (struct pseudo_header));
-	memcpy(pseudogram + sizeof(struct pseudo_header), udph, sizeof(struct udphdr) + strlen(data));
+	memcpy(pseudogram, (char*)&psh , sizeof (struct pseudo_header));
+	memcpy(pseudogram + sizeof(struct pseudo_header), udph, sizeof(struct udphdr) + strlen(data));*/
 	
-	udph->check = csum( (unsigned short*) pseudogram , psize);
+	udph->check = csum( (unsigned short*) datagram , ntohs(udph->len));
 	
 	{
-		if (sendto(s, datagram, iph->tot_len , 0, (struct sockaddr *) &sin, sizeof (sin)) < 0)
+		if (sendto(s, datagram, ntohs(udph->len) , 0, (struct sockaddr *) &sin, sizeof (sin)) < 0)
 		{
 			perror("sendto failed");
 		}
 		else
 		{
-			printf ("Packet Send. Length : %d \n" , iph->tot_len);
+			printf ("Packet Send. Length : %d \n" , ntohs(udph->len));
 		}
 	}
 }
@@ -202,7 +215,7 @@ int main (void)
 			return 1;
 		}
 		recieve_udp(buffer, data_size);
-		response_udp();
+		
 	}	
 	return 0;
 }
