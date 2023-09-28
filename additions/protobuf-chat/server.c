@@ -93,9 +93,9 @@ int main(int argc, char* argv[]){
                 exit(EXIT_FAILURE);  
             }  
             
-            if(send(new_socket, greeting_message, strlen(greeting_message), 0) != strlen(greeting_message)){  
+            /*if(send(new_socket, greeting_message, strlen(greeting_message), 0) != strlen(greeting_message)){  
                 perror("send");  
-            }
+            }*/
                  
             for (int i = 0; i < MAX_CLIENTS; i++){  
                 if(Clients[i].socket == 0 ){  
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]){
                  
             if (FD_ISSET(sd, &clients_fds)){
                 if ((valread = read(sd, buffer, MAX_BUFF_LENGTH)) == 0){  
-                    Message *msg=message__unpack(NULL, MAX_BUFF_LENGTH, valread);
+                    Message *msg=message__unpack(NULL, valread, buffer);
                     getpeername(sd, (struct sockaddr*)&address,(socklen_t*)&addrlen);  
                     if(strcmp(msg->text,"/reg")==0){// /reg
                         memcpy(Clients[i].name,msg->author, strlen(msg->author));
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]){
                         continue;
                     }
                     if(strcmp(msg->text,"/exit")==0){// /close
-                        send(Clients[i].socket, farewell_message, strlen(farewell_message),0);
+                        //send(Clients[i].socket, farewell_message, strlen(farewell_message),0);
                         close(sd);  
                         Clients[i].socket = 0;
                         memset(Clients[i].name,0,MAX_NAME_LENGTH);
